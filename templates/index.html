@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="A basic web app for the milestone project.">
+    <meta name="author" content="@cczhou">
+    <!-- <link rel="icon" href="favicon.ico"> -->
+
+    <title>We track stock prices!</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12 text-left">
+          <h2>Hello!</h2>
+          <ul>
+		  	Please enter a ticker symbol (e.g. GOOG for google) and select a type of price you wish to view.
+			<form id='userinput' method='post' action="" >
+			  <p>
+			  Ticker symbol: <input type='text' name='symbol' > <BR>
+			  <LABEL ACCESSKEY=a><input type='radio' name='type' value='Open Price' /> Open Price </LABEL> <BR>
+			  <LABEL ACCESSKEY=b><input type='radio' name='type' value='Close Price' /> Close Price </LABEL> <BR>
+			  <LABEL ACCESSKEY=c><input type='radio' name='type' value='Adjusted Open Price' /> Adjusted Open Price </LABEL> <BR>
+			  <LABEL ACCESSKEY=d><input type='radio' name='type' value='Adjusted Close Price' /> Adjusted Close Price </LABEL> <BR>
+			  <input type="submit" value="Submit">
+			  </p>
+			</form>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  </body>
+</html>
