@@ -5,7 +5,10 @@ from matplotlib import pyplot as plt
 import datetime
 import matplotlib.dates as mdates
 import io
-import base64
+#import base64
+from bokeh.embed import components 
+#from bokeh.mpl import to_bokeh
+from bokeh.plotting import figure
 
 app = Flask(__name__,static_folder='static')
 app.vars={}
@@ -14,6 +17,11 @@ def price(x):
   return '$%1.2f' % x
 
 def plot_graph(x,y):
+	plot = figure(tools="", title='Data from Quandle WIKI set', x_axis_label='date', x_axis_type='datetime')
+	plot.line(x,y)
+	plot.yaxis.axis_label = 'Price'
+	return plot
+'''
   years = mdates.YearLocator()   # every year
   months = mdates.MonthLocator()  # every month
   yearsFmt = mdates.DateFormatter('%Y')
@@ -40,15 +48,17 @@ def plot_graph(x,y):
   # rotates and right aligns the x labels, and moves the bottom of the
   # axes up to make room for them
   fig.autofmt_xdate()
+  return fig
 
   #fig.savefig(f,format='png')
-  img = io.BytesIO()
-  plt.savefig(img)
-  img.seek(0)
+  #img = io.BytesIO()
+  #plt.savefig(img)
+  #img.seek(0)
   buffer = b''.join(img)
-  b2 = base64.b64encode(buffer)
-  img2=b2.decode('utf-8')
-  return img2
+  #b2 = base64.b64encode(buffer)
+  #img2=b2.decode('utf-8')
+  #return img2
+'''
 
 
 @app.route('/',methods=['GET', 'POST'])
@@ -74,8 +84,10 @@ def index():
         y.append(float(a[8]))
       elif app.vars['type'] == 'Adjusted Close Price':
         y.append(float(a[11]))
-    img = plot_graph(x,y)
-    return render_template('results.html',symbol=app.vars['symbol'], typ=app.vars['type'],stock=img)
+    plot = plot_graph(x,y)
+    script, div = components(plot)
+    return render_template('results.html',symbol=app.vars['symbol'], typ=app.vars['type'], script=script, div=div)
+    #return render_template('results.html',symbol=app.vars['symbol'], typ=app.vars['type'],stock=img)
   #return 'request.method was not a GET!'
 
 @app.route('/results_page/<stock>')
