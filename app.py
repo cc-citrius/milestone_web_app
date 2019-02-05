@@ -1,122 +1,65 @@
 from flask import Flask, render_template, request, redirect
 import requests
+import quandl
 import json
 from matplotlib import pyplot as plt
 import datetime
-import matplotlib.dates as mdates
 import io
 #import base64
-from bokeh.embed import components 
-#from bokeh.mpl import to_bokeh
+from bokeh.embed import components,file_html
+from bokeh.resources import CDN
 from bokeh.plotting import figure
 
 app = Flask(__name__,static_folder='static')
 app.vars={}
 
-def price(x):
-  return '$%1.2f' % x
-
-def plot_graph(x,y):
-	plot = figure(tools="", title='Data from Quandle WIKI set', x_axis_label='date', x_axis_type='datetime')
-	plot.line(x,y)
-	plot.yaxis.axis_label = 'Price'
-	return plot
-'''
-  years = mdates.YearLocator()   # every year
-  months = mdates.MonthLocator()  # every month
-  yearsFmt = mdates.DateFormatter('%Y')
-
-  fig, ax = plt.subplots()
-  ax.plot(x, y, '-')
-  # format the ticks
-  ax.xaxis.set_major_locator(years)
-  ax.xaxis.set_major_formatter(yearsFmt)
-  ax.xaxis.set_minor_locator(months)
-
-  datemin = datetime.date(x[-1].year, 1, 1)
-  datemax = datetime.date(x[0].year + 1, 1, 1)
-  ax.set_xlim(datemin, datemax)
-
-  # format the coords message box
-  ax.format_xdata = mdates.DateFormatter('%Y-%m-%d')
-  #ax.format_ydata = price
-  ax.grid(True)
-
-  ax.set_xlabel('Year')
-  ax.set_ylabel('Price')
-
-  # rotates and right aligns the x labels, and moves the bottom of the
-  # axes up to make room for them
-  fig.autofmt_xdate()
-  return fig
-
-  #fig.savefig(f,format='png')
-  #img = io.BytesIO()
-  #plt.savefig(img)
-  #img.seek(0)
-  buffer = b''.join(img)
-  #b2 = base64.b64encode(buffer)
-  #img2=b2.decode('utf-8')
-  #return img2
-'''
-
+def dateFormat(aDatetime):
+	return ("%s-%s-%s" % (aDatetime.year, aDatetime.month, aDatetime.day))
 
 @app.route('/',methods=['GET', 'POST'])
 def index():
-  if request.method == 'GET':
-    return render_template('index.html')
-  else:
-    app.vars['symbol'] = request.form['symbol']
-    app.vars['type'] = request.form['type']
-    url="https://www.quandl.com/api/v3/datasets/WIKI/"+app.vars['symbol']+"/data.json?api_key=byQfxaddsZhrN9xjm_e1"
-    response = requests.get(url)
-    data = json.loads(response.text)
-    raw = data['dataset_data']['data']
-    x = []
-    y = []
-    for a in raw:
-      x.append(datetime.datetime.strptime(a[0],'%Y-%m-%d'))
-      if app.vars['type'] == 'Open Price':
-        y.append(float(a[1]))
-      elif app.vars['type'] == 'Close Price':
-        y.append(float(a[4]))
-      elif app.vars['type'] == 'Adjusted Open Price':
-        y.append(float(a[8]))
-      elif app.vars['type'] == 'Adjusted Close Price':
-        y.append(float(a[11]))
-    plot = plot_graph(x,y)
-    script, div = components(plot)
-    return render_template('results.html',symbol=app.vars['symbol'], typ=app.vars['type'], script=script, div=div)
-    #return render_template('results.html',symbol=app.vars['symbol'], typ=app.vars['type'],stock=img)
-  #return 'request.method was not a GET!'
+	if request.method == 'GET':
+		return render_template('index.html')
+	else:
+		app.vars['symbol'] = request.form['symbol']
+		app.vars['type'] = request.form['type']
+		print(app.vars['symbol'],app.vars['type'])
+		url="https://www.quandl.com/api/v3/datasets/WIKI/"+app.vars['symbol']+"/data.json?api_key=byQfxaddsZhrN9xjm_e1"
+		#now = datetime.datetime.now()
+		#stockDF = quandl.get("WIKI/"+app.vars['symbol'],returns='pandas',\
+		#				   	end_date=dateFormat(now), start_date=dateFormat(now-datetime.timedelta(days=30)))
+		#print(stockDF.head())
+		response = requests.get(url)
+		data = json.loads(response.text)
+		raw = data['dataset_data']['data']
+		x = []
+		y = []
+		for a in raw:
+			x.append(datetime.datetime.strptime(a[0],'%Y-%m-%d'))
+			if app.vars['type'] == 'Open Price':
+				y.append(float(a[1]))
+			elif app.vars['type'] == 'Close Price':
+				y.append(float(a[4]))
+			elif app.vars['type'] == 'Adjusted Open Price':
+				y.append(float(a[8]))
+			elif app.vars['type'] == 'Adjusted Close Price':
+				y.append(float(a[11]))
+		plot = figure(tools="", title='Data from Quandle WIKI set', x_axis_label='Date', x_axis_type='datetime',\
+					y_axis_label=app.vars['type']+" Price")
+		'''
+		if app.vars['type'] == 'Open Price':
+			plot.line(stockDF.index.values.tolist(), stockDF['Open'].values.tolist())
+		elif app.vars['type'] == 'Close Price':
+			plot.line(stockDF.index.values.tolist(), stockDF['Close'].values.tolist())
+		elif app.vars['type'] == 'Adjusted Open Price':
+			plot.line(stockDF.index.values.tolist(), stockDF['Adjusted Open'].values.tolist())
+		elif app.vars['type'] == 'Adjusted Close Price':
+			plot.line(stockDF.index.values.tolist(), stockDF['Adjusted Close'].values.tolist())
+		'''
+		plot.line(x,y)
+		#print('Plot made.')
+		return file_html(plot, CDN, "myplot")
 
-@app.route('/results_page/<stock>')
-def results(stock):
-  #return "<img src= {{ url_for('static',filename='graph.png') }} >" 
-  return render_template('results.html', title=stock)
-
-'''
-@app.route('/fig/<stock>')
-def fig(stock):
-  url="https://www.quandl.com/api/v3/datasets/WIKI/"+app.vars['symbol']+"/data.json?api_key=byQfxaddsZhrN9xjm_e1"
-  response = requests.get(url)
-  data = json.loads(response.text)
-  raw = data['dataset_data']['data']
-  x = []
-  y = []
-  for a in raw:
-    x.append(datetime.datetime.strptime(a[0],'%Y-%m-%d'))
-    if app.vars['type'] == 'Open Price':
-      y.append(float(a[1]))
-    elif app.vars['type'] == 'Close Price':
-      y.append(float(a[4]))
-    elif app.vars['type'] == 'Adjusted Open Price':
-      y.append(float(a[8]))
-    elif app.vars['type'] == 'Adjusted Close Price':
-      y.append(float(a[11]))
-  img = plot_graph(x,y)
-  return send_file(img, mimetype='image/png')
-'''
 
 if __name__ == '__main__':
-  app.run(port=33507,debug=True)
+	app.run(port=33507,debug=True)
